@@ -8,6 +8,7 @@ public class GameManger : MonoBehaviour
     [SerializeField]private Quiz quiz;
     [SerializeField]private EndScreen endScreen;
     [SerializeField] private GameObject lodingCanvas;
+    [SerializeField] private SubjectSelectionMenu subjectSelectionMenu;
     void Awake()
     {
         if (instance == null)
@@ -19,8 +20,29 @@ public class GameManger : MonoBehaviour
             Destroy(gameObject);  
         }
     }
-   public void ShowQuizScreen()
+
+    void Start()
     {
+        // 게임 시작 시 과목 선택 메뉴 표시
+        ShowSubjectSelectionMenu();
+    }
+    public void ShowSubjectSelectionMenu()
+    {
+        if (subjectSelectionMenu != null)
+        {
+            subjectSelectionMenu.ShowSubjectMenu();
+        }
+        quiz.gameObject.SetActive(false);
+        endScreen.gameObject.SetActive(false);
+        lodingCanvas.SetActive(false);
+    }
+
+    public void ShowQuizScreen()
+    {
+        if (subjectSelectionMenu != null)
+        {
+            subjectSelectionMenu.HideSubjectMenu();
+        }
         quiz.gameObject.SetActive(true);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
@@ -42,5 +64,10 @@ public class GameManger : MonoBehaviour
     public void OnReplayLevel()
     {
        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void OnBackToSubjectSelection()
+    {
+        ShowSubjectSelectionMenu();
     }
 }

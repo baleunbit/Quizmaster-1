@@ -5,26 +5,26 @@ using UnityEngine.UI;
 
 public class Quiz : MonoBehaviour
 {
-    [Header("Áú¹®")]
+    [Header("ë¬¸ì œ")]
     [SerializeField] TextMeshProUGUI questionText;
-    QuestionSO currentQuestion;//ÀÎ½ºÆåÅÍ¿¡¼­ ¸øº¸°Ô º¯°æ
+    QuestionSO currentQuestion;//í˜„ì¬ë¬¸ì œë¥¼ ë‹´ëŠ” ë³€ìˆ˜
     [SerializeField] List<QuestionSO> questions = new List<QuestionSO>();
 
-    [Header("º¸±â")]
+    [Header("ë‹µ")]
     [SerializeField] GameObject[] answerButtons;
 
-    [Header("¹öÆ°»ö±ò")]
+    [Header("ë²„íŠ¼ìŠ¤í”„ë¼ì´íŠ¸")]
     [SerializeField] Sprite defaultAnswerSprite;
     [SerializeField] Sprite correctAnswerSprite;
 
-    [Header("Å¸ÀÌ¸Ó")]
+    [Header("íƒ€ì´ë¨¸")]
     [SerializeField] Image timerImage;
     [SerializeField] Sprite problemTimerSprite;
     [SerializeField] Sprite solutionTimerSprite;
     Timer timer;
     bool chooseAnswer = false;
 
-    [Header("Á¡¼ö")]
+    [Header("ì ìˆ˜")]
     [SerializeField] TextMeshProUGUI scoreText;
     ScoreKeeper scoreKeeper;
 
@@ -35,6 +35,7 @@ public class Quiz : MonoBehaviour
     [SerializeField] ChatGPTClient chatGPTClint;
     [SerializeField] int qestionCount = 3;
     [SerializeField] TextMeshProUGUI londingText;
+
 
     bool isGenerateQuestions = false;
 
@@ -60,16 +61,30 @@ public class Quiz : MonoBehaviour
         isGenerateQuestions = true;
         GameManger.instance.ShowlodingSceen();
 
-        string topiToUse = GetTrendingTopic();
+        // ê³¼ëª© ì„ íƒ ë©”ë‰´ì—ì„œ ì„ íƒëœ ê³¼ëª© ì‚¬ìš©
+        string topiToUse = GetSelectedSubject();
         chatGPTClint.GenerateQuestions(qestionCount, topiToUse);
         Debug.Log("GenerateQuestionsIFNeeded:" + topiToUse);
+    }
+
+    private string GetSelectedSubject()
+    {
+        // SubjectSelectionMenuì—ì„œ ì„ íƒëœ ê³¼ëª© ê°€ì ¸ì˜¤ê¸°
+        SubjectSelectionMenu subjectMenu = FindFirstObjectByType<SubjectSelectionMenu>();
+        if (subjectMenu != null)
+        {
+            return subjectMenu.GetSelectedSubject();
+        }
+        
+        // ê¸°ë³¸ê°’ìœ¼ë¡œ ëœë¤ ê³¼ëª© ì‚¬ìš©
+        return GetTrendingTopic();
     }
 
     private string GetTrendingTopic()
     {
         string[] trendingtopics ={
-            "¿µ¾î","¹ÌÀûºĞ", "È®À²°ú Åë°è", "À±¸®¿Í »ç»ó","ÇÑ±¹»ç",
-            "»çÈ¸Å½±¸","°úÇĞÅ½±¸","Á÷¾÷Å½±¸"
+            "ì¼ë°˜ìƒì‹","ê³¼í•™", "í™•ë¥ ê³¼ í†µê³„", "ìˆ˜í•™ê³¼ ê³¼í•™","í•œêµ­ì‚¬",
+            "ì‚¬íšŒì •ì¹˜","ê²½ì œì •ì¹˜","ì—­ì‚¬ì •ì¹˜"
         };
         int ramdomindex = UnityEngine.Random.Range(0, trendingtopics.Length);
         return trendingtopics[ramdomindex];
@@ -77,13 +92,13 @@ public class Quiz : MonoBehaviour
 
     private void QuizGeneratedHandler(List<QuestionSO> generatedQuestions)
     {
-        //¹®Á¦¸¦ ¹Ş¾Æ¿ÂµÚ
+        //ìƒì„±ëœ ë¬¸ì œë¥¼ ë°›ì•„ì˜´
         isGenerateQuestions = false;
 
         if (generatedQuestions == null || generatedQuestions.Count == 0)
         {
-            Debug.LogError("¹®Á¦ »ı¼º ½ÇÆĞ");
-            londingText.text = "¹®Á¦ »ı¼º ½ÇÆĞ. ´Ù½Ã ½ÃµµÇØÁÖ¼¼¿ä.";
+            Debug.LogError("ë¬¸ì œ ìƒì„± ì‹¤íŒ¨");
+            londingText.text = "ë¬¸ì œ ìƒì„± ì‹¤íŒ¨. ë‹¤ì‹œ ì‹œë„í•´ì£¼ì„¸ìš”.";
             return;
         }
 
@@ -101,14 +116,14 @@ public class Quiz : MonoBehaviour
 
     private void Update()
     {
-        // Å¸ÀÌ¸Ó ÀÌ¹ÌÁö ¾÷µ¥ÀÌÆ®
+        // íƒ€ì´ë¨¸ ì´ë¯¸ì§€ ì—…ë°ì´íŠ¸
         if (timer.isProblemTime)
             timerImage.sprite = problemTimerSprite;
         else
             timerImage.sprite = solutionTimerSprite;
         timerImage.fillAmount = timer.fillAmount;
 
-        // ´ÙÀ½ ¹®Á¦ ºÒ·¯¿À±â
+        // ë‹¤ìŒ ë¬¸ì œ ë¡œë“œ ì²˜ë¦¬
         if (timer.loadNextQuestion)
         {
             if (questions.Count == 0)
@@ -123,7 +138,7 @@ public class Quiz : MonoBehaviour
             }
         }
 
-        // SolutionTimeÀÌ°í ´äÀ» ¼±ÅÃÇÏÁö ¾Ê¾ÒÀ» ¶§ ¿À´ä Ã³¸®
+        // SolutionTimeì´ê³  ë‹µì„ ì„ íƒí•˜ì§€ ì•Šì•˜ì„ ë•Œ ìë™ ì²˜ë¦¬
         if (timer.isProblemTime == false && chooseAnswer == false)
         {
             DisplaySolution(-1);
@@ -134,7 +149,7 @@ public class Quiz : MonoBehaviour
     {
         if (questions.Count <= 0)
         {
-            Debug.Log("¹®Á¦ ¾øÀ½");
+            Debug.Log("ë¬¸ì œ ì—†ìŒ");
             return;
         }
         
@@ -148,12 +163,18 @@ public class Quiz : MonoBehaviour
         OnDisplayQuestion();
         scoreKeeper.IncrementQuestionSeen();
         progressBar.value++;
+        
+        // ë¬¸ì œê°€ í‘œì‹œëœ í›„ íƒ€ì´ë¨¸ ì‹œì‘
+        if (timer != null)
+        {
+            timer.StartTimer();
+        }
     }
     private void GetRandomQuestion()
     {
         int Randomindex = UnityEngine.Random.Range(0, questions.Count);
         currentQuestion = questions[Randomindex];
-        questions.RemoveAt(Randomindex); // Áßº¹ ÃâÁ¦ ¹æÁö
+        questions.RemoveAt(Randomindex); // ì¤‘ë³µ ë°©ì§€
     }
 
     private void SetDefaultButtonSprites()
@@ -166,11 +187,26 @@ public class Quiz : MonoBehaviour
 
     private void OnDisplayQuestion()
     {
+        // ë¬¸ì œ í‘œì‹œ (ìƒ‰ìƒ ì´ˆê¸°í™”)
         questionText.text = currentQuestion.GetQuestion();
+        questionText.color = Color.white;
 
+        // ë‹µ ë²„íŠ¼ë“¤ì— í…ìŠ¤íŠ¸ ì„¤ì •
         for (int i = 0; i < answerButtons.Length; i++)
         {
-            answerButtons[i].GetComponentInChildren<TextMeshProUGUI>().text = currentQuestion.GetAnswer(i);
+            if (answerButtons[i] != null)
+            {
+                TextMeshProUGUI buttonText = answerButtons[i].GetComponentInChildren<TextMeshProUGUI>();
+                if (buttonText != null)
+                {
+                    buttonText.text = currentQuestion.GetAnswer(i);
+                    // í°íŠ¸ ì„¤ì • (í•œê¸€ ì§€ì›)
+                    if (buttonText.font == null)
+                    {
+                        buttonText.font = Resources.GetBuiltinResource<TMP_FontAsset>("Arial SDF");
+                    }
+                }
+            }
         }
     }
 
@@ -186,17 +222,30 @@ public class Quiz : MonoBehaviour
     {
         if (index == currentQuestion.GetCorrectAnswerIndex())
         {
-            questionText.text = "Á¤´äÀÔ´Ï´Ù!";
-            if (index >= 0)
+            // ì •ë‹µ ì²˜ë¦¬
+            questionText.text = "ì •ë‹µì…ë‹ˆë‹¤!";
+            questionText.color = Color.green;
+            
+            if (index >= 0 && answerButtons[index] != null)
+            {
                 answerButtons[index].GetComponent<Image>().sprite = correctAnswerSprite;
+            }
             scoreKeeper.IncrementCorrectAnswers();
         }
         else
         {
-            questionText.text = "Æ²·È½À´Ï´Ù. Á¤´äÀº " + currentQuestion.GetCorrectAnswer();
+            // ì˜¤ë‹µ ì²˜ë¦¬
+            questionText.text = "í‹€ë ¸ìŠµë‹ˆë‹¤.\nì •ë‹µì€ " + currentQuestion.GetCorrectAnswer() + "ì…ë‹ˆë‹¤.";
+            questionText.color = Color.red;
+            
+            // ì •ë‹µ ë²„íŠ¼ë„ ì •ë‹µ ìŠ¤í”„ë¼ì´íŠ¸ë¡œ í‘œì‹œ
+            int correctIndex = currentQuestion.GetCorrectAnswerIndex();
+            if (correctIndex >= 0 && correctIndex < answerButtons.Length && answerButtons[correctIndex] != null)
+            {
+                answerButtons[correctIndex].GetComponent<Image>().sprite = correctAnswerSprite;
+            }
         }
         SetButtonState(false);
-        // timer.CancelTimer = (); // Àß¸øµÈ ÄÚµåÀÌ¹Ç·Î Á¦°Å
     }
 
     private void SetButtonState(bool state)

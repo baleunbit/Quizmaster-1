@@ -1,14 +1,31 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EndScreen : MonoBehaviour
 {
-
     [SerializeField] TextMeshProUGUI finalScoreText;
     [SerializeField] ScoreKeeper scoreKeeper;
+    [SerializeField] Button subjectSelectionButton;
+
+    private void Start()
+    {
+        if (subjectSelectionButton != null)
+        {
+            subjectSelectionButton.onClick.AddListener(OnSubjectSelectionClicked);
+        }
+    }
 
     public void ShowFinalScore()
     {
-        finalScoreText.text = "ÃàÇÏÇÕ´Ï´Ù!\r\n" + $" ´ç½ÅÀº Á¡¼ö´Â {scoreKeeper.CalculateScore()}%ÀÔ´Ï´Ù.";
+        finalScoreText.text = "ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤!\r\n" + $"  ìµœì¢… ì ìˆ˜ëŠ” {scoreKeeper.CalculateScore()}%ì…ë‹ˆë‹¤.";
+    }
+
+    private void OnSubjectSelectionClicked()
+    {
+        if (GameManger.instance != null)
+        {
+            GameManger.instance.OnBackToSubjectSelection();
+        }
     }
 }
