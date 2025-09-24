@@ -10,6 +10,7 @@ public class GameManger : MonoBehaviour
     [SerializeField] private GameObject lodingCanvas;
     [SerializeField] private SubjectSelectionMenu subjectSelectionMenu;
     [SerializeField] private StartScreen startScreen;
+    [SerializeField] private AudioManager audioManager;
     void Awake()
     {
         if (instance == null)
@@ -24,8 +25,27 @@ public class GameManger : MonoBehaviour
 
     void Start()
     {
+        // AudioManager 초기화
+        InitializeAudioManager();
+        
         // 게임 시작 시 시작화면 표시
         ShowStartScreen();
+    }
+
+    private void InitializeAudioManager()
+    {
+        // AudioManager가 없으면 찾아서 연결
+        if (audioManager == null)
+        {
+            audioManager = FindFirstObjectByType<AudioManager>();
+        }
+        
+        // AudioManager가 여전히 없으면 생성
+        if (audioManager == null)
+        {
+            GameObject audioManagerObj = new GameObject("AudioManager");
+            audioManager = audioManagerObj.AddComponent<AudioManager>();
+        }
     }
     public void ShowStartScreen()
     {
@@ -40,6 +60,12 @@ public class GameManger : MonoBehaviour
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
+        
+        // 시작화면 BGM 재생
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM(AudioManager.BGMType.StartScreen);
+        }
     }
 
     public void ShowSubjectSelectionMenu()
@@ -55,6 +81,12 @@ public class GameManger : MonoBehaviour
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
+        
+        // 과목 선택 BGM 재생
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM(AudioManager.BGMType.SubjectSelection);
+        }
     }
 
     public void ShowQuizScreen()
@@ -70,6 +102,12 @@ public class GameManger : MonoBehaviour
         quiz.gameObject.SetActive(true);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
+        
+        // 퀴즈 BGM 재생
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM(AudioManager.BGMType.Quiz);
+        }
     }
     public void ShowEndScreen()
     {
@@ -81,6 +119,12 @@ public class GameManger : MonoBehaviour
         endScreen.gameObject.SetActive(true);
         endScreen.ShowFinalScore();
         lodingCanvas.SetActive(false);
+        
+        // 결과 화면 BGM 재생
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM(AudioManager.BGMType.EndScreen);
+        }
     }
 
     public void ShowlodingSceen()
@@ -92,6 +136,12 @@ public class GameManger : MonoBehaviour
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(true);
+        
+        // 로딩 BGM 재생
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM(AudioManager.BGMType.Loading);
+        }
     }
     public void OnReplayLevel()
     {
