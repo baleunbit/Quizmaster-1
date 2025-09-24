@@ -1057,8 +1057,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -352, y: -326}
-  m_SizeDelta: {x: 614.1, y: 134.26}
+  m_AnchoredPosition: {x: -429.9557, y: -326}
+  m_SizeDelta: {x: 458.1886, y: 134.26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &231622138
 MonoBehaviour:
@@ -1383,7 +1383,7 @@ GameObject:
   - component: {fileID: 475171687}
   - component: {fileID: 475171686}
   m_Layer: 5
-  m_Name: BackButton
+  m_Name: ExitButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1406,8 +1406,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 349, y: -326}
-  m_SizeDelta: {x: 614.1, y: 134.26}
+  m_AnchoredPosition: {x: 420.9591, y: -326}
+  m_SizeDelta: {x: 470.1818, y: 134.26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &475171686
 MonoBehaviour:
@@ -3167,6 +3167,7 @@ MonoBehaviour:
   lodingCanvas: {fileID: 684587575}
   subjectSelectionMenu: {fileID: 1106515998}
   startScreen: {fileID: 0}
+  audioManager: {fileID: 0}
 --- !u!4 &959838463
 Transform:
   m_ObjectHideFlags: 0
@@ -3782,9 +3783,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startScreenPanel: {fileID: 886396465}
   titleText: {fileID: 1314696181}
-  subtitleText: {fileID: 0}
+  subtitleText: {fileID: 1748399180}
   startButton: {fileID: 231622138}
-  settingsButton: {fileID: 231622138}
+  settingsButton: {fileID: 1794737843}
   exitButton: {fileID: 475171686}
   fadeInDuration: 1
   buttonDelay: 0.5
@@ -5465,7 +5466,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\uC2DC\uC791\uD558\uAE30"
+  m_Text: "\uC124\uC815"
 --- !u!222 &1710230969
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5561,7 +5562,7 @@ GameObject:
   - component: {fileID: 1748399181}
   - component: {fileID: 1748399180}
   m_Layer: 5
-  m_Name: TitleText (1)
+  m_Name: SubtitleText (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5583,7 +5584,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 216, y: 286}
+  m_AnchoredPosition: {x: 216, y: 217}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1748399180
@@ -5606,7 +5607,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uD034\uC988 \uACFC\uBAA9\uC744 \uC120\uD0DD\uD558\uC138\uC694\n"
+  m_text: "\uB192\uC740\uC810\uC218\uC5D0 \uB3C4\uC804\uD574\uBCF4\uC138\uC694"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a9556c4b07d102446a5efad7f58e1b9a, type: 2}
   m_sharedMaterial: {fileID: -2564319700207628723, guid: a9556c4b07d102446a5efad7f58e1b9a, type: 2}
@@ -5773,7 +5774,7 @@ GameObject:
   - component: {fileID: 1794737844}
   - component: {fileID: 1794737843}
   m_Layer: 5
-  m_Name: StartButton (1)
+  m_Name: Settings Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5881,6 +5882,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1794737841}
   m_CullTransparentMesh: 1
+--- !u!1 &1795244393
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1795244395}
+  - component: {fileID: 1795244394}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1795244394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795244393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a3e0ef3f7ff364faf4a15574771925, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startScreenBGM: {fileID: 0}
+  subjectSelectionBGM: {fileID: 0}
+  quizBGM: {fileID: 0}
+  endScreenBGM: {fileID: 0}
+  loadingBGM: {fileID: 0}
+  defaultVolume: 0.7
+  fadeDuration: 1
+  isMuted: 0
+--- !u!4 &1795244395
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795244393}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 744.2169, y: 426.05286, z: -5.7144885}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1834360416
 GameObject:
   m_ObjectHideFlags: 0
@@ -7061,3 +7114,4 @@ SceneRoots:
   - {fileID: 1857595072}
   - {fileID: 1271604440}
   - {fileID: 1426805164}
+  - {fileID: 1795244395}
