@@ -939,7 +939,7 @@ MonoBehaviour:
   solutionTimerSprite: {fileID: -5384725055999689231, guid: 39f6015b9ca8b7c41a6e3d90f3edc465, type: 3}
   scoreText: {fileID: 1864900563}
   progressBar: {fileID: 368498159}
-  chatGPTClint: {fileID: 2104706647}
+  chatGPTClint: {fileID: 0}
   qestionCount: 3
   londingText: {fileID: 1633900233}
 --- !u!1 &281429906
@@ -4478,7 +4478,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 216, y: 204}
+  m_AnchoredPosition: {x: 216, y: 286}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1678948413
