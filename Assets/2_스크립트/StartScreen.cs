@@ -100,16 +100,6 @@ public class StartScreen : MonoBehaviour
         SetButtonsInteractable(false);
     }
 
-    private void ShowStartScreen()
-    {
-        if (startScreenPanel != null)
-        {
-            startScreenPanel.SetActive(true);
-        }
-
-        // 페이드 인 애니메이션 시작
-        StartCoroutine(FadeInAnimation());
-    }
 
     private System.Collections.IEnumerator FadeInAnimation()
     {
