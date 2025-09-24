@@ -9,6 +9,7 @@ public class GameManger : MonoBehaviour
     [SerializeField]private EndScreen endScreen;
     [SerializeField] private GameObject lodingCanvas;
     [SerializeField] private SubjectSelectionMenu subjectSelectionMenu;
+    [SerializeField] private StartScreen startScreen;
     void Awake()
     {
         if (instance == null)
@@ -23,11 +24,30 @@ public class GameManger : MonoBehaviour
 
     void Start()
     {
-        // 게임 시작 시 과목 선택 메뉴 표시
-        ShowSubjectSelectionMenu();
+        // 게임 시작 시 시작화면 표시
+        ShowStartScreen();
     }
+    public void ShowStartScreen()
+    {
+        if (startScreen != null)
+        {
+            startScreen.ShowStartScreen();
+        }
+        if (subjectSelectionMenu != null)
+        {
+            subjectSelectionMenu.HideSubjectMenu();
+        }
+        quiz.gameObject.SetActive(false);
+        endScreen.gameObject.SetActive(false);
+        lodingCanvas.SetActive(false);
+    }
+
     public void ShowSubjectSelectionMenu()
     {
+        if (startScreen != null)
+        {
+            startScreen.HideStartScreen();
+        }
         if (subjectSelectionMenu != null)
         {
             subjectSelectionMenu.ShowSubjectMenu();
@@ -39,6 +59,10 @@ public class GameManger : MonoBehaviour
 
     public void ShowQuizScreen()
     {
+        if (startScreen != null)
+        {
+            startScreen.HideStartScreen();
+        }
         if (subjectSelectionMenu != null)
         {
             subjectSelectionMenu.HideSubjectMenu();
@@ -49,6 +73,10 @@ public class GameManger : MonoBehaviour
     }
     public void ShowEndScreen()
     {
+        if (startScreen != null)
+        {
+            startScreen.HideStartScreen();
+        }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(true);
         endScreen.ShowFinalScore();
@@ -57,6 +85,10 @@ public class GameManger : MonoBehaviour
 
     public void ShowlodingSceen()
     {
+        if (startScreen != null)
+        {
+            startScreen.HideStartScreen();
+        }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(true);
@@ -69,5 +101,10 @@ public class GameManger : MonoBehaviour
     public void OnBackToSubjectSelection()
     {
         ShowSubjectSelectionMenu();
+    }
+
+    public void OnBackToStartScreen()
+    {
+        ShowStartScreen();
     }
 }

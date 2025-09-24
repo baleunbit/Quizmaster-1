@@ -156,8 +156,12 @@ public class SubjectSelectionMenu : MonoBehaviour
 
     private void GoBack()
     {
-        // 메인 메뉴로 돌아가기 (필요시 구현)
-        Debug.Log("메인 메뉴로 돌아가기");
+        // 시작화면으로 돌아가기
+        Debug.Log("시작화면으로 돌아가기");
+        if (GameManger.instance != null)
+        {
+            GameManger.instance.OnBackToStartScreen();
+        }
     }
 
     public void ShowSubjectMenu()
