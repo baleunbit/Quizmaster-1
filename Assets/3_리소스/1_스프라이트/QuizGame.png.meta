@@ -222,7 +222,11 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      QuizGame_0: 5862005671125402171
+      QuizGame_1: 7495952649686802646
+      QuizGame_2: -8238302202949597787
+      QuizGame_3: -2202517756127200233
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
