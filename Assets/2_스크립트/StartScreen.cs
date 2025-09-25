@@ -142,16 +142,20 @@ public class StartScreen : MonoBehaviour
     private void OnSettingsButtonClicked()
     {
         Debug.Log("설정 버튼 클릭");
-        // 향후 설정 메뉴 구현
-        ShowMessage("설정 기능은 추후 업데이트 예정입니다.");
+        
+        // 설정 메뉴 표시
+        if (GameManger.instance != null)
+        {
+            GameManger.instance.ShowSettingsMenu();
+        }
     }
 
     private void OnExitButtonClicked()
     {
         Debug.Log("게임 종료 버튼 클릭");
         
-        // 확인 대화상자 표시
-        ShowExitConfirmation();
+        // 즉시 게임 종료 시도
+        ExitGame();
     }
 
     private System.Collections.IEnumerator FadeOutAndStartGame()
@@ -179,16 +183,24 @@ public class StartScreen : MonoBehaviour
         }
     }
 
-    private void ShowExitConfirmation()
+    private void ExitGame()
     {
-        // 간단한 확인 메시지 (향후 개선 가능)
+        Debug.Log("게임을 종료합니다.");
+        
+        // 플랫폼별 종료 처리
         if (Application.platform == RuntimePlatform.WebGLPlayer)
         {
-            ShowMessage("웹에서는 브라우저를 닫아주세요.");
+            // 웹에서는 브라우저 창 닫기 시도
+            Application.ExternalEval("window.close();");
         }
         else
         {
-            Application.Quit();
+            // 데스크톱/모바일에서는 게임 종료
+            #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+            #else
+                Application.Quit();
+            #endif
         }
     }
 

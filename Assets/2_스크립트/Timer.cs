@@ -5,7 +5,7 @@ public class Timer : MonoBehaviour
 {
     [SerializeField] float problemTime = 10f;   // 문제 풀이 시간
     [SerializeField] float solutionTime = 3f;   // 정답, 틀렸습니다 시간
-    float time = 0;
+    [HideInInspector] public float time = 0;
 
     [Header("UI Text 연결")]
     [SerializeField] TextMeshProUGUI problemTimeText;    // 문제 풀이 시간 표시용

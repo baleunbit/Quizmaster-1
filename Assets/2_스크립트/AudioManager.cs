@@ -78,7 +78,8 @@ public class AudioManager : MonoBehaviour
         
         if (targetBGM == null)
         {
-            Debug.LogWarning($"BGM 클립이 설정되지 않았습니다: {bgmType}");
+            // BGM 클립이 없어도 게임 진행에 문제없도록 경고만 출력
+            Debug.Log($"BGM 클립이 설정되지 않았습니다: {bgmType} (정상 동작)");
             return;
         }
 

@@ -10,6 +10,7 @@ public class GameManger : MonoBehaviour
     [SerializeField] private GameObject lodingCanvas;
     [SerializeField] private SubjectSelectionMenu subjectSelectionMenu;
     [SerializeField] private StartScreen startScreen;
+    [SerializeField] private SettingsMenu settingsMenu;
     [SerializeField] private AudioManager audioManager;
     void Awake()
     {
@@ -30,6 +31,16 @@ public class GameManger : MonoBehaviour
         
         // 게임 시작 시 시작화면 표시
         ShowStartScreen();
+    }
+
+    void Update()
+    {
+        // ESC키로 설정 메뉴 열기/닫기
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Log("ESC키 감지됨!");
+            ToggleSettingsMenu();
+        }
     }
 
     private void InitializeAudioManager()
@@ -57,9 +68,28 @@ public class GameManger : MonoBehaviour
         {
             subjectSelectionMenu.HideSubjectMenu();
         }
+        if (settingsMenu != null)
+        {
+            settingsMenu.HideSettingsMenu();
+        }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
+        
+        // 게임 시작 시에만 점수 초기화
+        if (quiz != null)
+        {
+            ScoreKeeper scoreKeeper = quiz.GetComponent<ScoreKeeper>();
+            if (scoreKeeper == null)
+            {
+                scoreKeeper = FindFirstObjectByType<ScoreKeeper>();
+            }
+            if (scoreKeeper != null)
+            {
+                scoreKeeper.ResetScore();
+                Debug.Log("게임 시작 - 점수가 초기화되었습니다.");
+            }
+        }
         
         // 시작화면 BGM 재생
         if (audioManager != null)
@@ -77,6 +107,10 @@ public class GameManger : MonoBehaviour
         if (subjectSelectionMenu != null)
         {
             subjectSelectionMenu.ShowSubjectMenu();
+        }
+        if (settingsMenu != null)
+        {
+            settingsMenu.HideSettingsMenu();
         }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
@@ -99,6 +133,10 @@ public class GameManger : MonoBehaviour
         {
             subjectSelectionMenu.HideSubjectMenu();
         }
+        if (settingsMenu != null)
+        {
+            settingsMenu.HideSettingsMenu();
+        }
         quiz.gameObject.SetActive(true);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
@@ -114,6 +152,10 @@ public class GameManger : MonoBehaviour
         if (startScreen != null)
         {
             startScreen.HideStartScreen();
+        }
+        if (settingsMenu != null)
+        {
+            settingsMenu.HideSettingsMenu();
         }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(true);
@@ -132,6 +174,10 @@ public class GameManger : MonoBehaviour
         if (startScreen != null)
         {
             startScreen.HideStartScreen();
+        }
+        if (settingsMenu != null)
+        {
+            settingsMenu.HideSettingsMenu();
         }
         quiz.gameObject.SetActive(false);
         endScreen.gameObject.SetActive(false);
@@ -156,5 +202,49 @@ public class GameManger : MonoBehaviour
     public void OnBackToStartScreen()
     {
         ShowStartScreen();
+    }
+
+    public void ShowSettingsMenu()
+    {
+        Debug.Log("GameManger.ShowSettingsMenu() 호출됨");
+        
+        if (settingsMenu != null)
+        {
+            Debug.Log("SettingsMenu가 연결되어 있음 - ShowSettingsMenu() 호출");
+            settingsMenu.ShowSettingsMenu();
+        }
+        else
+        {
+            Debug.LogError("SettingsMenu가 연결되지 않았습니다! GameManger의 Settings Menu 필드를 확인하세요.");
+        }
+        
+        // 다른 화면들은 숨기지 않고 설정 메뉴만 오버레이로 표시
+        // (설정은 다른 화면 위에 표시되는 오버레이)
+    }
+
+    public void ToggleSettingsMenu()
+    {
+        Debug.Log("ToggleSettingsMenu() 호출됨");
+        
+        if (settingsMenu != null)
+        {
+            Debug.Log("SettingsMenu가 연결되어 있음");
+            
+            // SettingsPanel이 활성화되어 있는지 확인
+            if (settingsMenu.settingsPanel != null && settingsMenu.settingsPanel.activeInHierarchy)
+            {
+                Debug.Log("ESC키로 설정 메뉴 닫기");
+                settingsMenu.HideSettingsMenu();
+            }
+            else
+            {
+                Debug.Log("ESC키로 설정 메뉴 열기");
+                settingsMenu.ShowSettingsMenu();
+            }
+        }
+        else
+        {
+            Debug.LogError("SettingsMenu가 연결되지 않았습니다!");
+        }
     }
 }

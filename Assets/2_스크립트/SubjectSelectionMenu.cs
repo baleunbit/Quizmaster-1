@@ -144,7 +144,7 @@ public class SubjectSelectionMenu : MonoBehaviour
         // ChatGPT로 퀴즈 생성 시작
         if (chatGPTClient != null)
         {
-            chatGPTClient.GenerateQuestions(3, selectedSubject);
+            chatGPTClient.GenerateQuestions(5, selectedSubject); // Quiz.cs와 동일하게 5개
         }
 
         // 로딩 화면 표시
