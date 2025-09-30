@@ -176,6 +176,12 @@ public class SettingsMenu : MonoBehaviour
 
     private void OnMuteButtonClicked()
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         if (audioManager != null)
         {
             audioManager.ToggleMute();
@@ -193,6 +199,12 @@ public class SettingsMenu : MonoBehaviour
 
     private void OnRestartButtonClicked()
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         Debug.Log("설정에서 다시하기");
         HideSettingsMenu();
         
@@ -205,14 +217,45 @@ public class SettingsMenu : MonoBehaviour
 
     private void OnBackButtonClicked()
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         Debug.Log("설정에서 뒤로가기");
         HideSettingsMenu();
+    }
+
+    private void PauseGameTimer()
+    {
+        // 퀴즈 화면에서만 타이머 일시정지
+        Timer timer = FindFirstObjectByType<Timer>();
+        if (timer != null)
+        {
+            timer.PauseTimer();
+            Debug.Log("게임 타이머 일시정지됨");
+        }
+    }
+
+    private void ResumeGameTimer()
+    {
+        // 퀴즈 화면에서만 타이머 재개
+        Timer timer = FindFirstObjectByType<Timer>();
+        if (timer != null)
+        {
+            timer.ResumeTimer();
+            Debug.Log("게임 타이머 재개됨");
+        }
     }
 
 
     public void ShowSettingsMenu()
     {
         Debug.Log("SettingsMenu.ShowSettingsMenu() 호출됨");
+        
+        // 타이머 일시정지
+        PauseGameTimer();
         
         if (settingsPanel != null)
         {
@@ -242,6 +285,10 @@ public class SettingsMenu : MonoBehaviour
     public void HideSettingsMenu()
     {
         Debug.Log("HideSettingsMenu() 호출됨");
+        
+        // 타이머 재개
+        ResumeGameTimer();
+        
         // 페이드 아웃 애니메이션 후 숨김
         StartCoroutine(FadeOutAndHide());
     }

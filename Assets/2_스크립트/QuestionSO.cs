@@ -4,9 +4,10 @@ using UnityEngine;
 public class QuestionSO : ScriptableObject
 {
     [TextArea(2, 6)]
-    [SerializeField] string question = "¿©±â¿¡ Áú¹®À» Àû¾îÁÖ¼¼¿ä.";
+    [SerializeField] string question = "ï¿½ï¿½ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.";
     [SerializeField] string[] answers = new string[4];
     [SerializeField] int correctAnswerIndex;
+    [SerializeField] string hint = ""; // ížŒíŠ¸ í•„ë“œ ì¶”ê°€
 
     public string GetQuestion()
     {
@@ -27,10 +28,24 @@ public class QuestionSO : ScriptableObject
     {
         return correctAnswerIndex;
     }
+
+    public string GetHint()
+    {
+        return hint;
+    }
+
     public void setData(string q, string[] a, int correctindex)
     {
         question = q;
         answers = a;
         correctAnswerIndex = correctindex;
+    }
+
+    public void setData(string q, string[] a, int correctindex, string h)
+    {
+        question = q;
+        answers = a;
+        correctAnswerIndex = correctindex;
+        hint = h;
     }
 }

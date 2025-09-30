@@ -18,6 +18,8 @@ public class Timer : MonoBehaviour
     
     [Header("타이머 제어")]
     [SerializeField] private bool isTimerActive = false;  // 타이머 활성화 상태
+    private bool isPaused = false;  // 일시정지 상태
+    private float pausedTime = 0f;  // 일시정지 시점의 시간
 
     private void Start()
     {
@@ -28,7 +30,7 @@ public class Timer : MonoBehaviour
 
     private void Update()
     {
-        if (isTimerActive)
+        if (isTimerActive && !isPaused)
         {
             TimerCountDown();
             UpdateFillAmount();
@@ -146,6 +148,26 @@ public class Timer : MonoBehaviour
     public void StopTimer()
     {
         isTimerActive = false;
+    }
+
+    public void PauseTimer()
+    {
+        if (isTimerActive && !isPaused)
+        {
+            isPaused = true;
+            pausedTime = time;
+            Debug.Log($"타이머 일시정지: {time:F1}초 남음");
+        }
+    }
+
+    public void ResumeTimer()
+    {
+        if (isTimerActive && isPaused)
+        {
+            isPaused = false;
+            time = pausedTime;
+            Debug.Log($"타이머 재개: {time:F1}초 남음");
+        }
     }
 
     public void ResetTimer()

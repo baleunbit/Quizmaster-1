@@ -26,7 +26,6 @@ public class Quiz : MonoBehaviour
 
     [Header("점수")]
     [SerializeField] TextMeshProUGUI scoreText;
-    [SerializeField] TextMeshProUGUI comboText;
     [SerializeField] TextMeshProUGUI livesText;
     ScoreKeeper scoreKeeper;
 
@@ -36,8 +35,15 @@ public class Quiz : MonoBehaviour
 
     [Header("Questiongeneration")]
     [SerializeField] ChatGPTClient chatGPTClint;
-    [SerializeField] int qestionCount = 5;
+    [SerializeField] int qestionCount = 10;
     [SerializeField] TextMeshProUGUI londingText;
+
+    [Header("힌트 시스템")]
+    [SerializeField] Button hintButton;
+    [SerializeField] TextMeshProUGUI hintText;
+    [SerializeField] int hintCost = 200; // 힌트 사용 시 차감될 점수
+    private bool hintUsed = false; // 현재 문제에서 힌트를 사용했는지
+    private bool timeOverProcessed = false; // 시간 초과 처리 완료 여부
 
 
     bool isGenerateQuestions = false;
@@ -45,16 +51,20 @@ public class Quiz : MonoBehaviour
     void Start()
     {
         timer = FindFirstObjectByType<Timer>();
-        scoreKeeper = FindFirstObjectByType<ScoreKeeper>();
-        chatGPTClint.quizGenerateHandler += QuizGeneratedHandler; 
+        
+        // ScoreKeeper 싱글톤 인스턴스 사용
+        scoreKeeper = ScoreKeeper.instance;
+        
+        chatGPTClint.quizGenerateHandler += QuizGeneratedHandler;
 
-        // 콤보 이벤트 구독
-        ScoreKeeper.OnComboChanged += UpdateComboDisplay;
+        // 힌트 버튼 초기화
+        if (hintButton != null)
+        {
+            hintButton.onClick.AddListener(OnHintButtonClicked);
+        }
 
         // 기존 문제들을 제거하지만 자동으로 생성하지는 않음
-        Debug.Log($"기존 문제 개수: {questions.Count}개");
         questions.Clear(); // 기존 문제들 제거
-        Debug.Log("기존 문제들을 제거했습니다. 과목 선택 후 문제가 생성됩니다.");
         
         // 점수 초기화는 GameManger.ShowStartScreen()에서 처리
         
@@ -66,8 +76,7 @@ public class Quiz : MonoBehaviour
     
     private void OnDestroy()
     {
-        // 이벤트 구독 해제
-        ScoreKeeper.OnComboChanged -= UpdateComboDisplay;
+        // 이벤트 구독 해제 (필요시 추가)
     }
     private void GenerateQuestionsIFNeeded()
     {
@@ -79,7 +88,6 @@ public class Quiz : MonoBehaviour
         // 과목 선택 메뉴에서 선택된 과목 사용
         string topiToUse = GetSelectedSubject();
         chatGPTClint.GenerateQuestions(qestionCount, topiToUse);
-        Debug.Log("GenerateQuestionsIFNeeded:" + topiToUse);
     }
 
     private string GetSelectedSubject()
@@ -89,13 +97,11 @@ public class Quiz : MonoBehaviour
         if (subjectMenu != null)
         {
             string selectedSubject = subjectMenu.GetSelectedSubject();
-            Debug.Log($"선택된 과목: {selectedSubject}");
             return selectedSubject;
         }
         
         // 기본값으로 랜덤 과목 사용
         string defaultSubject = GetTrendingTopic();
-        Debug.Log($"기본 과목 사용: {defaultSubject}");
         return defaultSubject;
     }
 
@@ -125,8 +131,6 @@ public class Quiz : MonoBehaviour
         // 진행률 바는 무한 게임이므로 고정값 사용
         if (progressBar.maxValue < 100) progressBar.maxValue = 100;
         UpdateProgressDisplay();
-
-        Debug.Log($"문제 생성 완료: {generatedQuestions.Count}개 문제 추가됨. 총 문제 수: {questions.Count}");
         
         // 문제가 생성된 후에만 화면 전환
         gameObject.SetActive(true);
@@ -154,12 +158,9 @@ public class Quiz : MonoBehaviour
         // 다음 문제 로드 처리
         if (timer.loadNextQuestion)
         {
-            Debug.Log($"loadNextQuestion이 true입니다. questions.Count: {questions.Count}");
-            
             // 게임 오버 체크 (3번 틀렸을 때)
             if (scoreKeeper.IsGameOver())
             {
-                Debug.Log("게임 오버! 3번 틀렸습니다. 엔드 스크린으로 이동");
                 GameManger.instance.ShowEndScreen();
                 return;
             }
@@ -167,20 +168,18 @@ public class Quiz : MonoBehaviour
             if (questions.Count == 0)
             {
                 // 문제가 없으면 자동으로 새로운 문제 생성 (같은 과목)
-                Debug.Log("문제가 소진되어 새로운 문제를 자동 생성합니다.");
                 GenerateQuestionsIFNeeded();
             }
             else
             {
-                //timer.loadNextQuestion = false;
                 GetNextQuestion();
             }
         }
 
-        // SolutionTime이고 답을 선택하지 않았을 때 자동 처리
-        if (timer.isProblemTime == false && chooseAnswer == false)
+        // SolutionTime이고 답을 선택하지 않았을 때 자동 처리 (한 번만)
+        if (timer.isProblemTime == false && chooseAnswer == false && !timeOverProcessed)
         {
-            DisplaySolution(-1);
+            DisplayTimeOver();
         }
     }
 
@@ -188,21 +187,28 @@ public class Quiz : MonoBehaviour
     {
         if (questions.Count <= 0)
         {
-            Debug.Log("문제 없음");
             return;
         }
         
-        Debug.Log($"GetNextQuestion 호출됨. 남은 문제 수: {questions.Count}");
         timer.loadNextQuestion = false;
 
         // 화면 전환은 QuizGeneratedHandler에서 이미 수행됨
         
         chooseAnswer = false;
+        hintUsed = false; // 힌트 사용 상태 초기화
+        timeOverProcessed = false; // 시간 초과 처리 상태 초기화
         SetButtonState(true);
         SetDefaultButtonSprites();
         GetRandomQuestion();
         OnDisplayQuestion();
-        scoreKeeper.IncrementQuestionSeen();
+        UpdateHintButton(); // 힌트 버튼 상태 업데이트
+        
+        // 힌트 텍스트 숨기기
+        if (hintText != null)
+        {
+            hintText.gameObject.SetActive(false);
+        }
+        // IncrementQuestionSeen()은 DisplaySolution() 또는 DisplayTimeOver()에서 호출됨
         progressBar.value++;
         UpdateProgressDisplay();
         
@@ -254,8 +260,19 @@ public class Quiz : MonoBehaviour
 
     public void OnAnswerButtonClicked(int index)
     {
-        Debug.Log($"OnAnswerButtonClicked 호출됨! 선택한 답: {index}");
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         chooseAnswer = true;
+        
+        // 힌트 텍스트 숨기기
+        if (hintText != null)
+        {
+            hintText.gameObject.SetActive(false);
+        }
         
         DisplaySolution(index);
         timer.CanelTimer();
@@ -263,14 +280,51 @@ public class Quiz : MonoBehaviour
         UpdateProgressDisplay();
     }
 
+    private void DisplayTimeOver()
+    {
+        // 시간 초과 처리 완료 표시 (중복 처리 방지)
+        timeOverProcessed = true;
+        
+        // 문제를 봤으므로 카운트 증가
+        scoreKeeper.IncrementQuestionSeen();
+        
+        // 시간 초과 처리 (목숨 감소)
+        questionText.text = "시간 초과!\n정답은 " + currentQuestion.GetCorrectAnswer() + "입니다.";
+        questionText.color = new Color(1f, 0.5f, 0f); // 주황색 (RGB: 255, 128, 0)
+        
+        // 틀린 답 카운트 증가 (시간 초과도 목숨 감소) - 한 번만 실행
+        scoreKeeper.IncrementWrongAnswers();
+        
+        // 남은 생명 표시
+        int remainingLives = scoreKeeper.GetRemainingLives();
+        if (remainingLives > 0)
+        {
+            questionText.text += $"\n남은 기회: {remainingLives}번";
+        }
+        else
+        {
+            questionText.text += "\n게임 오버!";
+        }
+        
+        // 정답 버튼 표시
+        int correctIndex = currentQuestion.GetCorrectAnswerIndex();
+        if (correctIndex >= 0 && correctIndex < answerButtons.Length && answerButtons[correctIndex] != null)
+        {
+            answerButtons[correctIndex].GetComponent<Image>().sprite = correctAnswerSprite;
+        }
+        
+        // 점수 표시 업데이트
+        UpdateScoreDisplay();
+        SetButtonState(false);
+    }
+
     private void DisplaySolution(int index)
     {
-        Debug.Log($"DisplaySolution 호출됨! 선택한 답: {index}, 정답: {currentQuestion.GetCorrectAnswerIndex()}");
+        // 문제를 봤으므로 카운트 증가 (정답/오답 관계없이)
+        scoreKeeper.IncrementQuestionSeen();
         
         if (index == currentQuestion.GetCorrectAnswerIndex())
         {
-            Debug.Log("정답입니다! 점수 계산 시작");
-            
             // 정답 처리
             questionText.text = "정답입니다!";
             questionText.color = Color.green;
@@ -285,20 +339,15 @@ public class Quiz : MonoBehaviour
             {
                 float remainingTime = timer.time;
                 scoreKeeper.AddTimeBonus(remainingTime);
-                Debug.Log($"정답! 시간 보너스 추가: {remainingTime}초");
             }
             
             scoreKeeper.IncrementCorrectAnswers();
-            Debug.Log("IncrementCorrectAnswers 호출 완료");
         }
         else
         {
-            // 오답 처리 - 콤보 브레이크
+            // 오답 처리
             questionText.text = "틀렸습니다.\n정답은 " + currentQuestion.GetCorrectAnswer() + "입니다.";
             questionText.color = Color.red;
-            
-            // 콤보 브레이크
-            scoreKeeper.BreakCombo();
             
             // 틀린 답 카운트 증가
             scoreKeeper.IncrementWrongAnswers();
@@ -321,6 +370,10 @@ public class Quiz : MonoBehaviour
                 answerButtons[correctIndex].GetComponent<Image>().sprite = correctAnswerSprite;
             }
         }
+        
+        // 점수 표시 업데이트 (정답/오답 처리 후)
+        UpdateScoreDisplay();
+        
         SetButtonState(false);
     }
 
@@ -336,8 +389,14 @@ public class Quiz : MonoBehaviour
     {
         if (scoreText != null && scoreKeeper != null)
         {
-            scoreText.text = $"점수: {scoreKeeper.GetTotalScore()} | 등급: {scoreKeeper.GetGrade()}";
-            scoreText.color = scoreKeeper.GetGradeColor();
+            int totalScore = scoreKeeper.GetTotalScore();
+            string grade = scoreKeeper.GetGrade();
+            Color gradeColor = scoreKeeper.GetGradeColor();
+            
+            Debug.Log($"점수 표시 업데이트: {totalScore}점, 등급: {grade}");
+            
+            scoreText.text = $"점수: {totalScore} | 등급: {grade}";
+            scoreText.color = gradeColor;
         }
         
         // 생명 표시 업데이트
@@ -356,31 +415,6 @@ public class Quiz : MonoBehaviour
         }
     }
     
-    private void UpdateComboDisplay(int combo, float multiplier)
-    {
-        if (comboText != null)
-        {
-            if (combo > 0)
-            {
-                comboText.text = $"콤보 {combo}연속! (x{multiplier:F1})";
-                comboText.color = GetComboColor(combo);
-                comboText.gameObject.SetActive(true);
-            }
-            else
-            {
-                comboText.gameObject.SetActive(false);
-            }
-        }
-    }
-    
-    private Color GetComboColor(int combo)
-    {
-        if (combo >= 10) return Color.red;
-        if (combo >= 6) return Color.magenta;
-        if (combo >= 4) return Color.yellow;
-        if (combo >= 2) return Color.green;
-        return Color.white;
-    }
     
     private void UpdateProgressDisplay()
     {
@@ -388,6 +422,7 @@ public class Quiz : MonoBehaviour
         {
             int correctAnswers = scoreKeeper.GetCorrectAnswers();
             int totalQuestions = scoreKeeper.GetQuestionSeen();
+            
             
             progressText.text = $"정답: {correctAnswers}개";
             
@@ -408,6 +443,100 @@ public class Quiz : MonoBehaviour
             int correctAnswers = scoreKeeper.GetCorrectAnswers();
             // 100개마다 한 바퀴 돌도록 설정
             progressBar.value = correctAnswers % 100;
+        }
+    }
+
+    /// <summary>
+    /// 힌트 버튼 클릭 시 호출되는 메서드
+    /// </summary>
+    private void OnHintButtonClicked()
+    {
+        Debug.Log("=== 힌트 버튼 클릭됨 ===");
+        Debug.Log($"hintUsed: {hintUsed}, chooseAnswer: {chooseAnswer}");
+        Debug.Log($"currentQuestion: {currentQuestion != null}");
+        Debug.Log($"hintText: {hintText != null}");
+        
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+
+        // 이미 힌트를 사용했거나 답을 선택했으면 무시
+        if (hintUsed || chooseAnswer)
+        {
+            Debug.Log("힌트 사용 불가: 이미 사용했거나 답을 선택함");
+            return;
+        }
+
+        // 미리 로드된 힌트 사용
+        UsePreloadedHint();
+    }
+
+    /// <summary>
+    /// 미리 로드된 힌트를 사용하는 메서드
+    /// </summary>
+    private void UsePreloadedHint()
+    {
+        if (currentQuestion == null) 
+        {
+            Debug.LogError("currentQuestion이 null입니다!");
+            return;
+        }
+
+        hintUsed = true;
+        
+        // 힌트 사용 시 점수 차감
+        if (scoreKeeper != null)
+        {
+            scoreKeeper.DeductScore(hintCost);
+            UpdateScoreDisplay();
+        }
+        
+        // 미리 로드된 힌트 표시
+        string hint = currentQuestion.GetHint();
+        Debug.Log($"힌트 내용: '{hint}' (길이: {hint?.Length ?? 0})");
+        
+        if (string.IsNullOrEmpty(hint))
+        {
+            Debug.LogWarning("힌트가 비어있습니다!");
+            hint = "힌트를 사용할 수 없습니다.";
+        }
+        
+        if (hintText != null)
+        {
+            hintText.text = $"💡 힌트: {hint}";
+            hintText.gameObject.SetActive(true);
+            Debug.Log($"힌트 텍스트 설정 완료: {hintText.text}");
+        }
+        else
+        {
+            Debug.LogError("hintText가 null입니다!");
+        }
+        
+        // 힌트 버튼 상태 업데이트
+        UpdateHintButton();
+        
+        Debug.Log($"힌트 사용! {hintCost}점 차감, 힌트: {hint}");
+    }
+
+
+    /// <summary>
+    /// 힌트 버튼 상태를 업데이트하는 메서드
+    /// </summary>
+    private void UpdateHintButton()
+    {
+        if (hintButton == null) return;
+
+        // 힌트를 이미 사용했거나 답을 선택했으면 버튼 비활성화
+        bool canUseHint = !hintUsed && !chooseAnswer;
+        hintButton.interactable = canUseHint;
+        
+        // 힌트 버튼 텍스트 업데이트
+        if (hintButton.GetComponentInChildren<TextMeshProUGUI>() != null)
+        {
+            string buttonText = hintUsed ? "힌트 사용됨" : $"힌트 ({hintCost}점)";
+            hintButton.GetComponentInChildren<TextMeshProUGUI>().text = buttonText;
         }
     }
 }

@@ -76,20 +76,8 @@ public class GameManger : MonoBehaviour
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
         
-        // 게임 시작 시에만 점수 초기화
-        if (quiz != null)
-        {
-            ScoreKeeper scoreKeeper = quiz.GetComponent<ScoreKeeper>();
-            if (scoreKeeper == null)
-            {
-                scoreKeeper = FindFirstObjectByType<ScoreKeeper>();
-            }
-            if (scoreKeeper != null)
-            {
-                scoreKeeper.ResetScore();
-                Debug.Log("게임 시작 - 점수가 초기화되었습니다.");
-            }
-        }
+        // 점수 초기화는 게임 시작할 때만 (퀴즈 화면 진입 시에는 제거)
+        // 게임 오버 후에는 점수를 유지하므로 초기화하지 않음
         
         // 시작화면 BGM 재생
         if (audioManager != null)
@@ -140,6 +128,8 @@ public class GameManger : MonoBehaviour
         quiz.gameObject.SetActive(true);
         endScreen.gameObject.SetActive(false);
         lodingCanvas.SetActive(false);
+        
+        // 점수 초기화는 게임 시작할 때만 (퀴즈 화면 진입 시에는 제거)
         
         // 퀴즈 BGM 재생
         if (audioManager != null)

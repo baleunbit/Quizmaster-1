@@ -92,6 +92,12 @@ public class SubjectSelectionMenu : MonoBehaviour
 
     private void SelectSubject(int subjectIndex)
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         selectedSubjectIndex = subjectIndex;
         
         // 모든 버튼의 선택 상태 초기화
@@ -126,6 +132,12 @@ public class SubjectSelectionMenu : MonoBehaviour
 
     private void StartQuiz()
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         if (selectedSubjectIndex == -1)
         {
             Debug.LogWarning("과목을 선택해주세요!");
@@ -156,6 +168,12 @@ public class SubjectSelectionMenu : MonoBehaviour
 
     private void GoBack()
     {
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         // 시작화면으로 돌아가기
         Debug.Log("시작화면으로 돌아가기");
         if (GameManger.instance != null)

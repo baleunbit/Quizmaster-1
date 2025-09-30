@@ -12,12 +12,19 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip endScreenBGM;
     [SerializeField] private AudioClip loadingBGM;
 
+    [Header("효과음 설정")]
+    [SerializeField] private AudioClip buttonClickSound;
+    [SerializeField] private AudioClip correctAnswerSound;
+    [SerializeField] private AudioClip wrongAnswerSound;
+    [SerializeField] private AudioClip timeOverSound;
+
     [Header("오디오 설정")]
     [SerializeField] private float defaultVolume = 0.7f;
     [SerializeField] private float fadeDuration = 1.0f;
     [SerializeField] private bool isMuted = false;
 
     private AudioSource audioSource;
+    private AudioSource sfxAudioSource; // 효과음용 AudioSource
     private AudioClip currentBGM;
     private Coroutine fadeCoroutine;
 
@@ -48,17 +55,23 @@ public class AudioManager : MonoBehaviour
 
     private void InitializeAudioSource()
     {
-        // AudioSource 컴포넌트 가져오기 또는 추가
+        // BGM용 AudioSource 컴포넌트 가져오기 또는 추가
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
-        // AudioSource 설정
+        // BGM용 AudioSource 설정
         audioSource.loop = true;
         audioSource.volume = defaultVolume;
         audioSource.playOnAwake = false;
+
+        // 효과음용 AudioSource 추가
+        sfxAudioSource = gameObject.AddComponent<AudioSource>();
+        sfxAudioSource.loop = false;
+        sfxAudioSource.volume = 0.8f; // 효과음은 조금 더 크게
+        sfxAudioSource.playOnAwake = false;
     }
 
     private void Start()
@@ -281,6 +294,50 @@ public class AudioManager : MonoBehaviour
     public bool IsPlaying()
     {
         return audioSource.isPlaying;
+    }
+
+    /// <summary>
+    /// 버튼 클릭 효과음을 재생합니다.
+    /// </summary>
+    public void PlayButtonClickSound()
+    {
+        if (buttonClickSound != null && !isMuted)
+        {
+            sfxAudioSource.PlayOneShot(buttonClickSound);
+        }
+    }
+
+    /// <summary>
+    /// 정답 효과음을 재생합니다.
+    /// </summary>
+    public void PlayCorrectAnswerSound()
+    {
+        if (correctAnswerSound != null && !isMuted)
+        {
+            sfxAudioSource.PlayOneShot(correctAnswerSound);
+        }
+    }
+
+    /// <summary>
+    /// 오답 효과음을 재생합니다.
+    /// </summary>
+    public void PlayWrongAnswerSound()
+    {
+        if (wrongAnswerSound != null && !isMuted)
+        {
+            sfxAudioSource.PlayOneShot(wrongAnswerSound);
+        }
+    }
+
+    /// <summary>
+    /// 시간 초과 효과음을 재생합니다.
+    /// </summary>
+    public void PlayTimeOverSound()
+    {
+        if (timeOverSound != null && !isMuted)
+        {
+            sfxAudioSource.PlayOneShot(timeOverSound);
+        }
     }
 
     // 디버그용 메서드

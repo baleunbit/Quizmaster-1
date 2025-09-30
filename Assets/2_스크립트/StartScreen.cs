@@ -135,6 +135,12 @@ public class StartScreen : MonoBehaviour
     {
         Debug.Log("게임 시작 버튼 클릭");
         
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
+        
         // 페이드 아웃 후 과목 선택 메뉴로 이동
         StartCoroutine(FadeOutAndStartGame());
     }
@@ -142,6 +148,12 @@ public class StartScreen : MonoBehaviour
     private void OnSettingsButtonClicked()
     {
         Debug.Log("설정 버튼 클릭");
+        
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
         
         // 설정 메뉴 표시
         if (GameManger.instance != null)
@@ -153,6 +165,12 @@ public class StartScreen : MonoBehaviour
     private void OnExitButtonClicked()
     {
         Debug.Log("게임 종료 버튼 클릭");
+        
+        // 버튼 클릭 사운드 재생
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayButtonClickSound();
+        }
         
         // 즉시 게임 종료 시도
         ExitGame();

@@ -3,6 +3,9 @@ using System;
 
 public class ScoreKeeper : MonoBehaviour
 {
+    // 싱글톤 인스턴스
+    public static ScoreKeeper instance;
+    
     [Header("현재 게임 점수")]
     private int correctAnswers = 0;
     private int questionSeen = 0;
@@ -10,19 +13,30 @@ public class ScoreKeeper : MonoBehaviour
     private float timeBonus = 0f;
     private int wrongAnswers = 0;
     
-    [Header("콤보 시스템")]
-    private int currentCombo = 0;
-    private int maxCombo = 0;
-    private int comboStreak = 0;
-
     [Header("점수 설정")]
-    [SerializeField] private int baseScorePerQuestion = 100;
+    [SerializeField] private int baseScorePerQuestion = 1000;
     [SerializeField] private int timeBonusMultiplier = 10;
-    [SerializeField] private int perfectBonus = 500;
     
-    [Header("콤보 설정")]
-    [SerializeField] private float[] comboMultipliers = { 1.0f, 1.2f, 1.5f, 2.0f, 2.5f, 3.0f };
-    [SerializeField] private int[] comboThresholds = { 0, 2, 4, 6, 8, 10 };
+    private void Awake()
+    {
+        // 싱글톤 패턴 구현
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 유지
+            Debug.Log("ScoreKeeper 싱글톤 인스턴스 생성됨");
+        }
+        else if (instance != this)
+        {
+            Debug.LogWarning("ScoreKeeper 중복 인스턴스 발견! 기존 인스턴스 유지");
+            Destroy(gameObject);
+            return;
+        }
+        
+        // Inspector에서 값이 변경되었을 경우를 대비해 강제로 1000으로 설정
+        baseScorePerQuestion = 1000;
+        Debug.Log($"baseScorePerQuestion 강제 설정: {baseScorePerQuestion}");
+    }
     
     [Header("게임 종료 설정")]
     [SerializeField] private int maxWrongAnswers = 3;
@@ -33,8 +47,6 @@ public class ScoreKeeper : MonoBehaviour
 
     // 이벤트
     public static event Action<int> OnScoreChanged;
-    public static event Action<string> OnGradeChanged;
-    public static event Action<int, float> OnComboChanged;
 
     private void Start()
     {
@@ -47,48 +59,27 @@ public class ScoreKeeper : MonoBehaviour
     public int GetTotalScore() => totalScore;
     public int GetWrongAnswers() => wrongAnswers;
     
-    // 콤보 관리
-    public int GetCurrentCombo() => currentCombo;
-    public int GetMaxCombo() => maxCombo;
-    public float GetComboMultiplier() => GetComboMultiplierForStreak(currentCombo);
 
     public void IncrementCorrectAnswers()
     {
         Debug.Log("=== IncrementCorrectAnswers 호출됨 ===");
         correctAnswers++;
-        currentCombo++;
-        comboStreak++;
         
-        Debug.Log($"정답 수 증가: {correctAnswers}, 콤보: {currentCombo}");
-        
-        // 최대 콤보 업데이트
-        if (currentCombo > maxCombo)
-        {
-            maxCombo = currentCombo;
-        }
+        Debug.Log($"정답 수 증가: {correctAnswers} (총 정답 수)");
         
         UpdateTotalScore();
-        OnComboChanged?.Invoke(currentCombo, GetComboMultiplier());
         
-        Debug.Log($"콤보! {currentCombo}연속 (x{GetComboMultiplier():F1})");
         Debug.Log("=== IncrementCorrectAnswers 완료 ===");
     }
     
-    public void BreakCombo()
-    {
-        if (currentCombo > 0)
-        {
-            Debug.Log($"콤보 브레이크! {currentCombo}연속에서 중단");
-            currentCombo = 0;
-            comboStreak = 0;
-            OnComboChanged?.Invoke(0, 1.0f);
-        }
-    }
     
     public void IncrementWrongAnswers()
     {
         wrongAnswers++;
+        Debug.Log($"=== IncrementWrongAnswers 호출됨 ===");
         Debug.Log($"틀린 답: {wrongAnswers}/{maxWrongAnswers}");
+        Debug.Log($"호출 스택: {System.Environment.StackTrace}");
+        Debug.Log("=== IncrementWrongAnswers 완료 ===");
     }
     
     public bool IsGameOver()
@@ -121,28 +112,18 @@ public class ScoreKeeper : MonoBehaviour
 
     private void UpdateTotalScore()
     {
-        // 콤보 배수 적용
-        float comboMultiplier = GetComboMultiplier();
-        int comboScore = Mathf.RoundToInt((correctAnswers * baseScorePerQuestion) * comboMultiplier);
+        // 기본 점수 계산 (문제당 1000점)
+        int baseScore = correctAnswers * baseScorePerQuestion;
         
-        totalScore = comboScore + Mathf.RoundToInt(timeBonus);
+        Debug.Log($"UpdateTotalScore 호출 전: totalScore={totalScore}");
+        totalScore = baseScore + Mathf.RoundToInt(timeBonus);
+        Debug.Log($"UpdateTotalScore 호출 후: totalScore={totalScore}");
         
-        Debug.Log($"점수 계산: 정답={correctAnswers}, 기본점수={baseScorePerQuestion}, 콤보배수={comboMultiplier:F1}, 콤보점수={comboScore}, 시간보너스={timeBonus:F1}, 총점수={totalScore}");
+        Debug.Log($"점수 계산: 정답={correctAnswers}, 기본점수={baseScore}, 시간보너스={timeBonus:F1}, 총점수={totalScore}");
         
         OnScoreChanged?.Invoke(totalScore);
     }
     
-    private float GetComboMultiplierForStreak(int streak)
-    {
-        for (int i = comboThresholds.Length - 1; i >= 0; i--)
-        {
-            if (streak >= comboThresholds[i])
-            {
-                return comboMultipliers[i];
-            }
-        }
-        return 1.0f;
-    }
 
     // 등급 시스템 (점수 기반)
     public string GetGrade()
@@ -151,30 +132,30 @@ public class ScoreKeeper : MonoBehaviour
         
         Debug.Log($"등급 계산: 현재 점수 {currentScore}점");
         
-        // 점수에 따른 등급 결정 (사용자 요청 기준)
-        if (currentScore >= 10000000)
+        // 점수에 따른 등급 결정 (새로운 기준)
+        if (currentScore >= 30000)
         {
-            Debug.Log($"등급 결정: S등급 ({currentScore}점 >= 10000000점)");
+            Debug.Log($"등급 결정: S등급 ({currentScore}점 >= 30000점)");
             return "S";
         }
-        else if (currentScore >= 300000)
+        else if (currentScore >= 20000)
         {
-            Debug.Log($"등급 결정: A등급 ({currentScore}점 >= 300000점, < 10000000점)");
+            Debug.Log($"등급 결정: A등급 ({currentScore}점 >= 20000점, < 30000점)");
             return "A";
         }
-        else if (currentScore >= 150000)
+        else if (currentScore >= 15000)
         {
-            Debug.Log($"등급 결정: B등급 ({currentScore}점 >= 150000점, < 300000점)");
+            Debug.Log($"등급 결정: B등급 ({currentScore}점 >= 15000점, < 20000점)");
             return "B";
         }
-        else if (currentScore >= 100000)
+        else if (currentScore >= 10000)
         {
-            Debug.Log($"등급 결정: C등급 ({currentScore}점 >= 100000점, < 150000점)");
+            Debug.Log($"등급 결정: C등급 ({currentScore}점 >= 10000점, < 15000점)");
             return "C";
         }
         else if (currentScore >= 5000)
         {
-            Debug.Log($"등급 결정: D등급 ({currentScore}점 >= 5000점, < 100000점)");
+            Debug.Log($"등급 결정: D등급 ({currentScore}점 >= 5000점, < 10000점)");
             return "D";
         }
         else if (currentScore >= 1000)
@@ -211,6 +192,7 @@ public class ScoreKeeper : MonoBehaviour
         int highScore = GetHighScore();
         
         Debug.Log($"SaveHighScore: 현재점수={currentScore}, 최고점수={highScore}");
+        Debug.Log($"ScoreKeeper 상태 확인: correctAnswers={correctAnswers}, questionSeen={questionSeen}, totalScore={totalScore}");
         
         if (currentScore > highScore)
         {
@@ -250,42 +232,40 @@ public class ScoreKeeper : MonoBehaviour
     public void ResetScore()
     {
         Debug.Log("=== ScoreKeeper.ResetScore() 시작 ===");
+        Debug.Log($"초기화 전 상태: correctAnswers={correctAnswers}, totalScore={totalScore}");
+        Debug.Log($"호출 스택: {System.Environment.StackTrace}");
+        
+        // 게임 오버 후에는 점수를 유지하므로 초기화하지 않음
+        if (correctAnswers > 0 || questionSeen > 0)
+        {
+            Debug.Log("게임 오버 후 점수 유지 - ResetScore 무시됨");
+            return;
+        }
+        
         correctAnswers = 0;
         questionSeen = 0;
         totalScore = 0;
         timeBonus = 0f;
         wrongAnswers = 0;
-        currentCombo = 0;
-        comboStreak = 0;
         OnScoreChanged?.Invoke(0);
-        OnComboChanged?.Invoke(0, 1.0f);
         Debug.Log("=== ScoreKeeper.ResetScore() 완료 - 모든 값이 0으로 초기화됨 ===");
     }
 
-    // 완벽한 점수 보너스 (모든 문제를 맞췄을 때)
-    public void AddPerfectBonus()
-    {
-        if (wrongAnswers == 0 && questionSeen > 0)
-        {
-            totalScore += perfectBonus;
-            OnScoreChanged?.Invoke(totalScore);
-            Debug.Log($"완벽한 점수 보너스: +{perfectBonus}점");
-        }
-    }
 
     // 점수 정보 문자열
     public string GetScoreInfo()
     {
-        return $"정답: {correctAnswers}/{questionSeen} | 점수: {totalScore} | 등급: {GetGrade()} | 최대콤보: {maxCombo}";
+        return $"정답: {correctAnswers}/{questionSeen} | 점수: {totalScore} | 등급: {GetGrade()}";
     }
-    
-    // 콤보 정보 문자열
-    public string GetComboInfo()
+
+    /// <summary>
+    /// 힌트 사용 시 점수를 차감하는 메서드
+    /// </summary>
+    /// <param name="amount">차감할 점수</param>
+    public void DeductScore(int amount)
     {
-        if (currentCombo > 0)
-        {
-            return $"콤보 {currentCombo}연속! (x{GetComboMultiplier():F1})";
-        }
-        return "";
+        totalScore = Mathf.Max(0, totalScore - amount); // 점수는 0 이하로 내려가지 않음
+        OnScoreChanged?.Invoke(totalScore);
+        Debug.Log($"힌트 사용으로 {amount}점 차감. 현재 점수: {totalScore}");
     }
 }
