@@ -83,8 +83,8 @@ public class StartScreen : MonoBehaviour
         if (buttonText != null)
         {
             buttonText.text = text;
-            buttonText.fontSize = 18;
-            buttonText.color = Color.white;
+            buttonText.fontSize = 50;
+            buttonText.color = Color.black;
         }
     }
 
