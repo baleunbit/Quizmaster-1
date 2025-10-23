@@ -53,11 +53,6 @@ public class ChatGPTClient : MonoBehaviour
     private const string API_URL = "https://api.openai.com/v1/chat/completions";
     private string apiKey;
     
-    [Header("로딩 최적화")]
-    [SerializeField] private float requestTimeout = 30f; // 요청 타임아웃 (초)
-    [SerializeField] private int maxRetries = 2; // 최대 재시도 횟수
-    [SerializeField] private float retryDelay = 2f; // 재시도 지연 시간
-    
     // 힌트 이벤트
     public static event Action<string> OnHintReceived;
 
@@ -68,54 +63,27 @@ public class ChatGPTClient : MonoBehaviour
 
     private string LoadFromResources()
     {
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            // 웹에서는 프록시 엔드포인트 사용
-            return proxyEndpoint;
-        #else
-            try
+        try
+        {
+            TextAsset configFile = Resources.Load<TextAsset>("config");
+            if (configFile != null)
             {
-                // 웹에서 안전한 Resources.Load 사용
-                TextAsset configFile = null;
-                #if UNITY_WEBGL && !UNITY_EDITOR
-                    // 웹에서는 WebBuildBugFixer의 안전한 메서드 사용
-                    if (WebBuildBugFixer.SafeResourcesLoad<TextAsset>("config") != null)
-                    {
-                        configFile = WebBuildBugFixer.SafeResourcesLoad<TextAsset>("config");
-                    }
-                #else
-                    configFile = WebBuildBugFixer.SafeResourcesLoad<TextAsset>("config");
-                #endif
-                
-                if (configFile != null)
+                string[] lines = configFile.text.Split('\n');
+                foreach (string line in lines)
                 {
-                    string[] lines = configFile.text.Split('\n');
-                    foreach (string line in lines)
+                    if (line.StartsWith("OPENAI_API_KEY="))
                     {
-                        if (line.StartsWith("OPENAI_API_KEY="))
-                        {
-                            return line.Substring("OPENAI_API_KEY=".Length).Trim();
-                        }
+                        return line.Substring("OPENAI_API_KEY=".Length).Trim();
                     }
                 }
             }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Resources 설정 파일 로드 실패: {e.Message}");
-            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Resources 설정 파일 로드 실패: {e.Message}");
+        }
 
-            return "";
-        #endif
-    }
-
-    private string GetRequestURL()
-    {
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            // 웹에서는 프록시 엔드포인트 사용
-            return string.IsNullOrEmpty(proxyEndpoint) ? API_URL : proxyEndpoint;
-        #else
-            // 데스크톱에서는 직접 API 호출
-            return API_URL;
-        #endif
+        return "";
     }
 
     public delegate void QuizGenerateHandler(List<QuestionSO> questions);
@@ -129,57 +97,20 @@ public class ChatGPTClient : MonoBehaviour
 
     public void GenerateQuizQuestions(int count = 3, string topic = "일반상식")
     {
-        StartCoroutine(RequestQuizQuestionsWithRetry(count, topic, 0));
-    }
-
-    private IEnumerator RequestQuizQuestionsWithRetry(int count, string topic, int retryCount)
-    {
-        yield return StartCoroutine(RequestQuizQuestions(count, topic));
-        
-        // 실패 시 재시도
-        if (retryCount < maxRetries)
-        {
-            yield return new WaitForSeconds(retryDelay);
-            StartCoroutine(RequestQuizQuestionsWithRetry(count, topic, retryCount + 1));
-        }
+        StartCoroutine(RequestQuizQuestions(count, topic));
     }
 
     private IEnumerator RequestQuizQuestions(int count, string topic)
     {
-        // 캐시에서 문제 확인
-        if (QuestionCache.instance != null && QuestionCache.instance.HasEnoughQuestions(topic, count))
-        {
-            List<QuestionSO> cachedQuestions = QuestionCache.instance.GetCachedQuestions(topic, count);
-            if (cachedQuestions.Count > 0)
-            {
-                quizGenerateHandler?.Invoke(cachedQuestions);
-                yield break;
-            }
-        }
-
-        // 웹빌드에서 대체 문제 확인
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            if (WebFallbackQuestions.instance != null && WebFallbackQuestions.instance.HasFallbackQuestions(topic))
-            {
-                List<QuestionSO> fallbackQuestions = WebFallbackQuestions.instance.GetFallbackQuestions(topic, count);
-                if (fallbackQuestions.Count > 0)
-                {
-                    Debug.Log($"웹빌드 대체 문제 사용: {topic} 주제 {fallbackQuestions.Count}개");
-                    quizGenerateHandler?.Invoke(fallbackQuestions);
-                    yield break;
-                }
-            }
-        #endif
-
         string prompt = $"다음 조건에 맞는 간결하고 재미있는 객관식 퀴즈 문제를 {count}개 생성해주세요:\n" +
                        $"주제: {topic}\n" +
                        "조건:\n" +
-                       "- 문제는 20자 이내로 간결하게 작성해주세요\n" +
-                       "- 각 선택지는 10자 이내로 간단명료하게 작성해주세요\n" +
+                       "- 문제는 30자 이내로 간결하게 작성해주세요\n" +
+                       "- 각 선택지는 15자 이내로 간단명료하게 작성해주세요\n" +
                        "- 4개의 선택지를 제공해주세요\n" +
                        "- 정답은 0~3 사이의 인덱스로 표시해주세요\n" +
                        "- 문제와 선택지는 핵심만 담아 간결하게 작성해주세요\n" +
-                       "- 각 문제마다 힌트를 30자 이내로 제공해주세요 (정답을 직접 말하지 않고 학습에 도움이 되는 정보)\n" +
+                       "- 각 문제마다 힌트를 50자 이내로 제공해주세요 (정답을 직접 말하지 않고 학습에 도움이 되는 정보)\n" +
                        "- 응답은 반드시 다음 JSON 형식으로만 제공해주세요:\n" +
                        "{\n" +
                        "  \"questions\": [\n" +
@@ -192,55 +123,28 @@ public class ChatGPTClient : MonoBehaviour
                        "  ]\n" +
                        "}";
 
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log("Prompt to ChatGPT:\n" + prompt);
-        #endif
+        Debug.Log("Prompt to ChatGPT:\n" + prompt);
 
         ChatGPTRequest request = new ChatGPTRequest
         {
             messages = new Message[]
             {
                 new Message { role = "user", content = prompt }
-            },
-            temperature = 0.7f, // 창의성과 일관성의 균형
-            max_completion_tokens = 2000 // 토큰 수 제한으로 응답 속도 향상
+            }
         };
 
         string jsonRequest = JsonUtility.ToJson(request);
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log("Request JSON:\n" + jsonRequest);
-        #endif
+        Debug.Log("Request JSON:\n" + jsonRequest);
 
-        string requestURL = GetRequestURL();
-        using (UnityWebRequest webRequest = new UnityWebRequest(requestURL, "POST"))
+        using (UnityWebRequest webRequest = new UnityWebRequest(API_URL, "POST"))
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonRequest);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
-            
-            #if UNITY_WEBGL && !UNITY_EDITOR
-                // 웹에서는 프록시를 통해 요청
-                webRequest.SetRequestHeader("X-API-Key", apiKey);
-                // CORS 헤더 추가
-                webRequest.SetRequestHeader("Access-Control-Allow-Origin", "*");
-                webRequest.SetRequestHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-                webRequest.SetRequestHeader("Access-Control-Allow-Headers", "Content-Type, X-API-Key");
-            #else
-                // 데스크톱에서는 직접 API 호출
-                webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
-            #endif
+            webRequest.SetRequestHeader("Authorization", $"Bearer {apiKey}");
 
-            // 타임아웃 설정
-            float startTime = Time.time;
             yield return webRequest.SendWebRequest();
-
-            // 타임아웃 체크
-            if (Time.time - startTime > requestTimeout)
-            {
-                Debug.LogError($"요청 타임아웃: {requestTimeout}초 초과");
-                yield break;
-            }
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
@@ -280,23 +184,12 @@ public class ChatGPTClient : MonoBehaviour
                     QuizData quizData = JsonUtility.FromJson<QuizData>(jsonContent);
                     List<QuestionSO> generatedQuestions = CreateQuestionSOs(quizData.questions);
 
-                    // 생성된 문제를 캐시에 저장
-                    if (QuestionCache.instance != null)
-                    {
-                        QuestionCache.instance.CacheQuestions(topic, generatedQuestions);
-                    }
-
                     quizGenerateHandler?.Invoke(generatedQuestions);
                 }
                 catch (Exception e)
                 {
                     Debug.LogError($"응답 파싱 오류: {e.Message}");
                     Debug.LogError($"응답 내용: {webRequest.downloadHandler.text}");
-                    
-                    // 웹빌드에서 대체 문제 사용
-                    #if UNITY_WEBGL && !UNITY_EDITOR
-                        UseFallbackQuestions(count, topic);
-                    #endif
                 }
             }
             else
@@ -304,39 +197,6 @@ public class ChatGPTClient : MonoBehaviour
                 Debug.LogError($"ChatGPT API 요청 실패: {webRequest.error}");
                 Debug.LogError($"응답 코드: {webRequest.responseCode}");
                 Debug.LogError($"응답 내용: {webRequest.downloadHandler.text}");
-                
-                // 웹빌드에서 대체 문제 사용
-                #if UNITY_WEBGL && !UNITY_EDITOR
-                    UseFallbackQuestions(count, topic);
-                #endif
-            }
-        }
-    }
-
-    /// <summary>
-    /// 웹빌드에서 대체 문제를 사용합니다
-    /// </summary>
-    private void UseFallbackQuestions(int count, string topic)
-    {
-        if (WebFallbackQuestions.instance != null && WebFallbackQuestions.instance.HasFallbackQuestions(topic))
-        {
-            List<QuestionSO> fallbackQuestions = WebFallbackQuestions.instance.GetFallbackQuestions(topic, count);
-            if (fallbackQuestions.Count > 0)
-            {
-                Debug.Log($"웹빌드 대체 문제 사용: {topic} 주제 {fallbackQuestions.Count}개");
-                quizGenerateHandler?.Invoke(fallbackQuestions);
-                return;
-            }
-        }
-        
-        // 대체 문제도 없으면 일반상식으로 대체
-        if (WebFallbackQuestions.instance != null)
-        {
-            List<QuestionSO> generalQuestions = WebFallbackQuestions.instance.GetFallbackQuestions("일반상식", count);
-            if (generalQuestions.Count > 0)
-            {
-                Debug.Log($"웹빌드 일반상식 대체 문제 사용: {generalQuestions.Count}개");
-                quizGenerateHandler?.Invoke(generalQuestions);
             }
         }
     }
@@ -476,21 +336,13 @@ public class ChatGPTClient : MonoBehaviour
         string jsonRequest = JsonUtility.ToJson(request);
         Debug.Log("힌트 요청 JSON:\n" + jsonRequest);
 
-        string requestURL = GetRequestURL();
-        using (UnityWebRequest webRequest = new UnityWebRequest(requestURL, "POST"))
+        using (UnityWebRequest webRequest = new UnityWebRequest(API_URL, "POST"))
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonRequest);
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
-            
-            #if UNITY_WEBGL && !UNITY_EDITOR
-                // 웹에서는 프록시를 통해 요청
-                webRequest.SetRequestHeader("X-API-Key", apiKey);
-            #else
-                // 데스크톱에서는 직접 API 호출
-                webRequest.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            #endif
+            webRequest.SetRequestHeader("Authorization", "Bearer " + apiKey);
 
             yield return webRequest.SendWebRequest();
 

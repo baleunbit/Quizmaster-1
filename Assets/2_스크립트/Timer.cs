@@ -97,15 +97,15 @@ public class Timer : MonoBehaviour
             // 문제 풀이 시간일 때
             if (problemTimeText != null)
             {
-                WebBuildSettings.SetWebText(problemTimeText, $"문제 시간: {displayTime}");
+                problemTimeText.text = $"문제 시간: {displayTime}";
             }
             if (solutionTimeText != null)
             {
-                WebBuildSettings.SetWebText(solutionTimeText, "");
+                solutionTimeText.text = "";
             }
             if (countdownText != null)
             {
-                WebBuildSettings.SetWebText(countdownText, displayTime.ToString());
+                countdownText.text = displayTime.ToString();
                 // 시간이 3초 이하일 때 빨간색으로 강조
                 if (displayTime <= 3)
                 {
@@ -122,15 +122,15 @@ public class Timer : MonoBehaviour
             // 정답 표시 시간일 때
             if (problemTimeText != null)
             {
-                WebBuildSettings.SetWebText(problemTimeText, "");
+                problemTimeText.text = "";
             }
             if (solutionTimeText != null)
             {
-                WebBuildSettings.SetWebText(solutionTimeText, $"정답 표시: {displayTime}");
+                solutionTimeText.text = $"정답 표시: {displayTime}";
             }
             if (countdownText != null)
             {
-                WebBuildSettings.SetWebText(countdownText, displayTime.ToString());
+                countdownText.text = displayTime.ToString();
                 countdownText.color = Color.yellow;
             }
         }

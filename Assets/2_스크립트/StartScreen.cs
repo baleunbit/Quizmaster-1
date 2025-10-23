@@ -32,19 +32,17 @@ public class StartScreen : MonoBehaviour
         // 제목 설정
         if (titleText != null)
         {
-            WebBuildSettings.SetWebText(titleText, "Quiz Master");
+            titleText.text = "Quiz Master";
             titleText.fontSize = 72;
             titleText.color = Color.white;
-            WebBuildSettings.SetWebFont(titleText, null);
         }
 
         // 부제목 설정
         if (subtitleText != null)
         {
-            WebBuildSettings.SetWebText(subtitleText, "지식을 테스트해보세요!");
+            subtitleText.text = "지식을 테스트해보세요!";
             subtitleText.fontSize = 24;
             subtitleText.color = Color.yellow;
-            WebBuildSettings.SetWebFont(subtitleText, null);
         }
 
         // CanvasGroup 컴포넌트 가져오기 또는 추가
@@ -207,31 +205,21 @@ public class StartScreen : MonoBehaviour
     {
         Debug.Log("게임을 종료합니다.");
         
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            // 웹에서는 사용자에게 종료 안내 메시지 표시
-            ShowWebExitMessage();
-        #else
+        // 플랫폼별 종료 처리
+        if (Application.platform == RuntimePlatform.WebGLPlayer)
+        {
+            // 웹에서는 브라우저 창 닫기 시도
+            Application.ExternalEval("window.close();");
+        }
+        else
+        {
             // 데스크톱/모바일에서는 게임 종료
             #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
             #else
                 Application.Quit();
             #endif
-        #endif
-    }
-
-    private void ShowWebExitMessage()
-    {
-        // 웹에서는 브라우저 탭을 닫을 수 없으므로 사용자에게 안내
-        string message = "웹 브라우저에서 이 탭을 닫아주세요.";
-        
-        // 웹에서 사용자에게 알림 표시 (최신 방법)
-        #if UNITY_WEBGL && !UNITY_EDITOR
-            Debug.Log($"웹 알림: {message}");
-            // Unity WebGL의 새로운 JavaScript 상호작용 방식 사용
-        #else
-            Debug.Log($"데스크톱 알림: {message}");
-        #endif
+        }
     }
 
     private void ShowMessage(string message)

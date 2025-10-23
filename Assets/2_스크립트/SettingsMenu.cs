@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Linq;
 
 public class SettingsMenu : MonoBehaviour
 {
@@ -128,7 +127,7 @@ public class SettingsMenu : MonoBehaviour
         audioManager = AudioManager.instance;
         if (audioManager == null)
         {
-            audioManager = WebBuildBugFixer.SafeFindObjectsOfType<AudioManager>().FirstOrDefault();
+            audioManager = FindFirstObjectByType<AudioManager>();
         }
 
         // AudioManager가 있으면 현재 설정으로 UI 업데이트
@@ -231,7 +230,7 @@ public class SettingsMenu : MonoBehaviour
     private void PauseGameTimer()
     {
         // 퀴즈 화면에서만 타이머 일시정지
-        Timer timer = WebBuildBugFixer.SafeFindObjectsOfType<Timer>().FirstOrDefault();
+        Timer timer = FindFirstObjectByType<Timer>();
         if (timer != null)
         {
             timer.PauseTimer();
@@ -242,7 +241,7 @@ public class SettingsMenu : MonoBehaviour
     private void ResumeGameTimer()
     {
         // 퀴즈 화면에서만 타이머 재개
-        Timer timer = WebBuildBugFixer.SafeFindObjectsOfType<Timer>().FirstOrDefault();
+        Timer timer = FindFirstObjectByType<Timer>();
         if (timer != null)
         {
             timer.ResumeTimer();

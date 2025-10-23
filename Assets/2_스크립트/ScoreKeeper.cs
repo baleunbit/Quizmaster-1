@@ -23,25 +23,8 @@ public class ScoreKeeper : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            
-            // Assertion failed 오류 방지를 위한 안전한 DontDestroyOnLoad 적용
-            try
-            {
-                // 루트 GameObject인지 확인 후 DontDestroyOnLoad 적용
-                if (transform.parent == null)
-                {
-                    // HideFlag 충돌 방지를 위한 지연 적용
-                    StartCoroutine(ApplyDontDestroyOnLoadSafely());
-                }
-                else
-                {
-                    Debug.LogWarning("ScoreKeeper가 루트 GameObject가 아닙니다. DontDestroyOnLoad를 적용할 수 없습니다.");
-                }
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"DontDestroyOnLoad 적용 중 오류 발생: {e.Message}");
-            }
+            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 유지
+            Debug.Log("ScoreKeeper 싱글톤 인스턴스 생성됨");
         }
         else if (instance != this)
         {
@@ -53,37 +36,6 @@ public class ScoreKeeper : MonoBehaviour
         // Inspector에서 값이 변경되었을 경우를 대비해 강제로 1000으로 설정
         baseScorePerQuestion = 1000;
         Debug.Log($"baseScorePerQuestion 강제 설정: {baseScorePerQuestion}");
-    }
-    
-    /// <summary>
-    /// Assertion failed 오류 방지를 위한 안전한 DontDestroyOnLoad 적용
-    /// </summary>
-    private System.Collections.IEnumerator ApplyDontDestroyOnLoadSafely()
-    {
-        // 프레임 지연으로 HideFlag 충돌 방지
-        yield return new WaitForEndOfFrame();
-        
-        try
-        {
-            // HideFlag 충돌 방지를 위한 추가 검사
-            if (gameObject != null && gameObject.activeInHierarchy)
-            {
-                // 객체의 HideFlag 상태 확인
-                if (gameObject.hideFlags == HideFlags.None)
-                {
-                    DontDestroyOnLoad(gameObject);
-                    Debug.Log("ScoreKeeper 싱글톤 인스턴스 생성됨 (안전한 DontDestroyOnLoad 적용)");
-                }
-                else
-                {
-                    Debug.LogWarning($"ScoreKeeper HideFlag 충돌 감지: {gameObject.hideFlags}. DontDestroyOnLoad 건너뜀");
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"DontDestroyOnLoad 적용 실패: {e.Message}");
-        }
     }
     
     [Header("게임 종료 설정")]
@@ -124,12 +76,10 @@ public class ScoreKeeper : MonoBehaviour
     public void IncrementWrongAnswers()
     {
         wrongAnswers++;
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"=== IncrementWrongAnswers 호출됨 ===");
-            Debug.Log($"틀린 답: {wrongAnswers}/{maxWrongAnswers}");
-            Debug.Log($"호출 스택: {System.Environment.StackTrace}");
-            Debug.Log("=== IncrementWrongAnswers 완료 ===");
-        #endif
+        Debug.Log($"=== IncrementWrongAnswers 호출됨 ===");
+        Debug.Log($"틀린 답: {wrongAnswers}/{maxWrongAnswers}");
+        Debug.Log($"호출 스택: {System.Environment.StackTrace}");
+        Debug.Log("=== IncrementWrongAnswers 완료 ===");
     }
     
     public bool IsGameOver()
@@ -283,9 +233,7 @@ public class ScoreKeeper : MonoBehaviour
     {
         Debug.Log("=== ScoreKeeper.ResetScore() 시작 ===");
         Debug.Log($"초기화 전 상태: correctAnswers={correctAnswers}, totalScore={totalScore}");
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Debug.Log($"호출 스택: {System.Environment.StackTrace}");
-        #endif
+        Debug.Log($"호출 스택: {System.Environment.StackTrace}");
         
         // 게임 오버 후에는 점수를 유지하므로 초기화하지 않음
         if (correctAnswers > 0 || questionSeen > 0)

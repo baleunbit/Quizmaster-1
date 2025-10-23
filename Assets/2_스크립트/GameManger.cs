@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Linq;
 
 public class GameManger : MonoBehaviour
 {
@@ -49,7 +48,7 @@ public class GameManger : MonoBehaviour
         // AudioManager가 없으면 찾아서 연결
         if (audioManager == null)
         {
-            audioManager = WebBuildBugFixer.SafeFindObjectsOfType<AudioManager>().FirstOrDefault();
+            audioManager = FindFirstObjectByType<AudioManager>();
         }
         
         // AudioManager가 여전히 없으면 생성
