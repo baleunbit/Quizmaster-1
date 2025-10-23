@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Linq;
 
 public class SubjectSelectionMenu : MonoBehaviour
 {
@@ -37,8 +38,8 @@ public class SubjectSelectionMenu : MonoBehaviour
     {
         InitializeUI();
         SetupButtons();
-        chatGPTClient = FindFirstObjectByType<ChatGPTClient>();
-        quiz = FindFirstObjectByType<Quiz>();
+        chatGPTClient = WebBuildBugFixer.SafeFindObjectsOfType<ChatGPTClient>().FirstOrDefault();
+        quiz = WebBuildBugFixer.SafeFindObjectsOfType<Quiz>().FirstOrDefault();
     }
 
     private void InitializeUI()

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class Quiz : MonoBehaviour
 {
@@ -50,7 +51,7 @@ public class Quiz : MonoBehaviour
 
     void Start()
     {
-        timer = FindFirstObjectByType<Timer>();
+        timer = WebBuildBugFixer.SafeFindObjectsOfType<Timer>().FirstOrDefault();
         
         // ScoreKeeper 싱글톤 인스턴스 사용
         scoreKeeper = ScoreKeeper.instance;
@@ -87,13 +88,25 @@ public class Quiz : MonoBehaviour
 
         // 과목 선택 메뉴에서 선택된 과목 사용
         string topiToUse = GetSelectedSubject();
+        
+        // 캐시에서 문제 확인
+        if (QuestionCache.instance != null && QuestionCache.instance.HasEnoughQuestions(topiToUse, qestionCount))
+        {
+            List<QuestionSO> cachedQuestions = QuestionCache.instance.GetCachedQuestions(topiToUse, qestionCount);
+            if (cachedQuestions.Count > 0)
+            {
+                QuizGeneratedHandler(cachedQuestions);
+                return;
+            }
+        }
+        
         chatGPTClint.GenerateQuestions(qestionCount, topiToUse);
     }
 
     private string GetSelectedSubject()
     {
         // SubjectSelectionMenu에서 선택된 과목 가져오기
-        SubjectSelectionMenu subjectMenu = FindFirstObjectByType<SubjectSelectionMenu>();
+        SubjectSelectionMenu subjectMenu = WebBuildBugFixer.SafeFindObjectsOfType<SubjectSelectionMenu>().FirstOrDefault();
         if (subjectMenu != null)
         {
             string selectedSubject = subjectMenu.GetSelectedSubject();
@@ -236,7 +249,7 @@ public class Quiz : MonoBehaviour
     private void OnDisplayQuestion()
     {
         // 문제 표시 (색상 초기화)
-        questionText.text = currentQuestion.GetQuestion();
+        WebBuildSettings.SetWebText(questionText, currentQuestion.GetQuestion());
         questionText.color = Color.white;
 
         // 답 버튼들에 텍스트 설정
@@ -247,12 +260,9 @@ public class Quiz : MonoBehaviour
                 TextMeshProUGUI buttonText = answerButtons[i].GetComponentInChildren<TextMeshProUGUI>();
                 if (buttonText != null)
                 {
-                    buttonText.text = currentQuestion.GetAnswer(i);
-                    // 폰트 설정 (한글 지원)
-                    if (buttonText.font == null)
-                    {
-                        buttonText.font = Resources.GetBuiltinResource<TMP_FontAsset>("Arial SDF");
-                    }
+                    WebBuildSettings.SetWebText(buttonText, currentQuestion.GetAnswer(i));
+                    // 웹에서 안전한 폰트 설정
+                    WebBuildSettings.SetWebFont(buttonText, null);
                 }
             }
         }
@@ -395,7 +405,7 @@ public class Quiz : MonoBehaviour
             
             Debug.Log($"점수 표시 업데이트: {totalScore}점, 등급: {grade}");
             
-            scoreText.text = $"점수: {totalScore} | 등급: {grade}";
+            WebBuildSettings.SetWebText(scoreText, $"점수: {totalScore} | 등급: {grade}");
             scoreText.color = gradeColor;
         }
         
@@ -403,7 +413,7 @@ public class Quiz : MonoBehaviour
         if (livesText != null && scoreKeeper != null)
         {
             int remainingLives = scoreKeeper.GetRemainingLives();
-            livesText.text = $"생명: {remainingLives}";
+            WebBuildSettings.SetWebText(livesText, $"생명: {remainingLives}");
             
             // 생명에 따른 색상 변경
             if (remainingLives <= 1)
@@ -423,8 +433,7 @@ public class Quiz : MonoBehaviour
             int correctAnswers = scoreKeeper.GetCorrectAnswers();
             int totalQuestions = scoreKeeper.GetQuestionSeen();
             
-            
-            progressText.text = $"정답: {correctAnswers}개";
+            WebBuildSettings.SetWebText(progressText, $"정답: {correctAnswers}개");
             
             // 정답에 따른 색상 변경
             if (correctAnswers >= 5)
